@@ -3,11 +3,14 @@ import requests
 import urllib3
 
 
-def download_file(file_url, payload, file_path):
-    response = requests.get(file_url, params=payload, verify=False)
-    response.raise_for_status()
+def download_file(response, file_path):
     with open(file_path, 'wb') as file:
         file.write(response.content)
+
+
+def check_for_redirect(response):
+    if len(response.history):
+        raise requests.HTTPError()
 
 
 def main():
@@ -19,7 +22,13 @@ def main():
         payload = {"id": id}
         file_name = f'id{id}.txt'
         file_path = os.path.join(os.getcwd(), folder, file_name)
-        download_file(book_url, payload, file_path)
+        response = requests.get(book_url, params=payload, verify=False)
+        response.raise_for_status()
+        try:
+            check_for_redirect(response)
+        except requests.exceptions.HTTPError:
+            continue
+        download_file(response,file_path)
 
 
 if __name__ == '__main__':
