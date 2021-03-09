@@ -37,7 +37,11 @@ def get_book_attributes(book_id, payload):
     comments = soup.find_all('div', class_='texts')
     for comment in comments:
         book_comments.append(comment.contents[4].text)
-    return book_title, image_url, book_comments
+    genres = soup.find('span', class_='d_book').find_all('a')
+    book_genres = []
+    for genre in genres:
+        book_genres.append(*genre.contents)
+    return book_title, image_url, book_comments, book_genres
 
 
 def main():
@@ -53,13 +57,14 @@ def main():
             check_for_redirect(response)
         except requests.exceptions.HTTPError:
             continue
-        book_title, image_url, book_comments = get_book_attributes(book_id, payload)
+        book_title, image_url, book_comments, book_genres = get_book_attributes(book_id, payload)
         txt_file_name = f'{book_id}. {book_title}.txt'
         image_file_name = unquote(os.path.split(urlparse(image_url).path)[1])
         download_file(txt_file_name, book_folder, response.content)
         download_cover(image_url, image_file_name, images_folder)
         print(book_title)
-        print(*book_comments)
+        # print(*book_comments)
+        print(book_genres)
 
 
 if __name__ == '__main__':
