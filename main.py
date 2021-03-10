@@ -7,6 +7,37 @@ from bs4 import BeautifulSoup
 from pathvalidate import sanitize_filename, sanitize_filepath
 
 
+def get_book_page_html(book_id, payload):
+    url = f'https://tululu.org/b{book_id}/'
+    response = requests.get(url, params=payload, verify=False)
+    response.raise_for_status()
+    return response.text
+
+
+def parse_book_page(book_description):
+    soup = BeautifulSoup(book_description, 'lxml')
+    book_title = soup.find('h1').text.split('::')[0].strip()
+    book_author = soup.find('h1').text.split('::')[1].strip()
+    image_name = soup.find('div', class_='bookimage').find('img').attrs.get('src')
+    image_url = urljoin('https://tululu.org', image_name)
+    book_comments = []
+    comments = soup.find_all('div', class_='texts')
+    for comment in comments:
+        book_comments.append(comment.contents[4].text)
+    genres = soup.find('span', class_='d_book').find_all('a')
+    book_genres = []
+    for genre in genres:
+        book_genres.append(*genre.contents)
+    book_attributes = {
+        'book_title': book_title,
+        'book_author': book_author,
+        'image_url': image_url,
+        'book_comments': book_comments,
+        'book_genres': book_genres
+    }
+    return book_attributes
+
+
 def check_for_redirect(response):
     if len(response.history):
         raise requests.HTTPError()
@@ -25,25 +56,6 @@ def download_cover(image_url, filename, folder):
     download_file(filename, folder, response.content)
 
 
-def get_book_attributes(book_id, payload):
-    url = f'https://tululu.org/b{book_id}/'
-    response = requests.get(url, params=payload, verify=False)
-    response.raise_for_status()
-    soup = BeautifulSoup(response.text, 'lxml')
-    book_title = soup.find('h1').text.split('::')[0].strip()
-    image_name = soup.find('div', class_='bookimage').find('img').attrs.get('src')
-    image_url = urljoin('https://tululu.org', image_name)
-    book_comments = []
-    comments = soup.find_all('div', class_='texts')
-    for comment in comments:
-        book_comments.append(comment.contents[4].text)
-    genres = soup.find('span', class_='d_book').find_all('a')
-    book_genres = []
-    for genre in genres:
-        book_genres.append(*genre.contents)
-    return book_title, image_url, book_comments, book_genres
-
-
 def main():
     urllib3.disable_warnings()
     book_url = 'https://tululu.org/txt.php'
@@ -57,14 +69,15 @@ def main():
             check_for_redirect(response)
         except requests.exceptions.HTTPError:
             continue
-        book_title, image_url, book_comments, book_genres = get_book_attributes(book_id, payload)
+        book_description = get_book_page_html(book_id, payload)
+        book_attributes = parse_book_page(book_description)
+        book_title = book_attributes.get('book_title')
+        image_url = book_attributes.get('image_url')
         txt_file_name = f'{book_id}. {book_title}.txt'
         image_file_name = unquote(os.path.split(urlparse(image_url).path)[1])
         download_file(txt_file_name, book_folder, response.content)
         download_cover(image_url, image_file_name, images_folder)
-        print(book_title)
-        # print(*book_comments)
-        print(book_genres)
+        print(book_attributes)
 
 
 if __name__ == '__main__':
