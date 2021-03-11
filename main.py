@@ -1,3 +1,4 @@
+import argparse
 import os
 from urllib.parse import urljoin, urlparse, unquote
 
@@ -58,10 +59,14 @@ def download_cover(image_url, filename, folder):
 
 def main():
     urllib3.disable_warnings()
+    parser = argparse.ArgumentParser()
+    parser.add_argument('start_id', nargs='?', default=1, type=int)
+    parser.add_argument('end_id', nargs='?', default=10, type=int)
+    args = parser.parse_args()
     book_url = 'https://tululu.org/txt.php'
     book_folder = 'books'
     images_folder = 'images'
-    for book_id in range(1, 11):
+    for book_id in range(args.start_id, args.end_id + 1):
         payload = {"id": book_id}
         response = requests.get(book_url, params=payload, verify=False)
         response.raise_for_status()
@@ -77,7 +82,6 @@ def main():
         image_file_name = unquote(os.path.split(urlparse(image_url).path)[1])
         download_file(txt_file_name, book_folder, response.content)
         download_cover(image_url, image_file_name, images_folder)
-        print(book_attributes)
 
 
 if __name__ == '__main__':
