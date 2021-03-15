@@ -29,14 +29,10 @@ def parse_book_page(book_description):
     book_author = soup.find('h1').text.split('::')[1].strip()
     image_name = soup.find('div', class_='bookimage').find('img').attrs.get('src')
     image_url = urljoin('https://tululu.org', image_name)
-    book_comments = []
     comments = soup.find_all('div', class_='texts')
-    for comment in comments:
-        book_comments.append(comment.contents[4].text)
+    book_comments = [comment.contents[4].text for comment in comments]
     genres = soup.find('span', class_='d_book').find_all('a')
-    book_genres = []
-    for genre in genres:
-        book_genres.append(*genre.contents)
+    book_genres = [genre.text for genre in genres]
     book_attributes = {
         'book_title': book_title,
         'book_author': book_author,
