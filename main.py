@@ -8,6 +8,14 @@ from bs4 import BeautifulSoup
 from pathvalidate import sanitize_filename, sanitize_filepath
 
 
+def create_args_parser():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('start_id', nargs='?', default=1, type=int)
+    parser.add_argument('end_id', nargs='?', default=10, type=int)
+    args = parser.parse_args()
+    return args
+
+
 def get_book_page_html(book_id, payload):
     url = f'https://tululu.org/b{book_id}/'
     response = requests.get(url, params=payload, verify=False)
@@ -66,10 +74,7 @@ def download_cover(image_url, filename, folder):
 
 def main():
     urllib3.disable_warnings()
-    parser = argparse.ArgumentParser()
-    parser.add_argument('start_id', nargs='?', default=1, type=int)
-    parser.add_argument('end_id', nargs='?', default=10, type=int)
-    args = parser.parse_args()
+    args = create_args_parser()
     book_url = 'https://tululu.org/txt.php'
     book_folder = 'books'
     images_folder = 'images'
