@@ -69,7 +69,6 @@ def main():
     for book_id in range(args.start_id, args.end_id + 1):
         payload = {"id": book_id}
         response = requests.get(book_url, params=payload, verify=False)
-        response.raise_for_status()
         try:
             check_for_redirect(response)
         except requests.exceptions.HTTPError:
