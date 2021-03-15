@@ -39,7 +39,8 @@ def parse_book_page(book_description):
     return book_attributes
 
 
-def check_for_redirect(response):
+def check_for_redirect(book_url, payload):
+    response = requests.get(book_url, params=payload, verify=False)
     if len(response.history):
         raise requests.HTTPError()
 
@@ -49,6 +50,12 @@ def download_file(filename, folder, response_content):
     file_path = sanitize_filepath(os.path.join(folder, sanitize_filename(filename)))
     with open(file_path, 'wb') as file:
         file.write(response_content)
+
+
+def download_book(filename, folder, book_url, payload):
+    response = requests.get(book_url, params=payload, verify=False)
+    response.raise_for_status()
+    download_file(filename, folder, response.content)
 
 
 def download_cover(image_url, filename, folder):
@@ -68,9 +75,8 @@ def main():
     images_folder = 'images'
     for book_id in range(args.start_id, args.end_id + 1):
         payload = {"id": book_id}
-        response = requests.get(book_url, params=payload, verify=False)
         try:
-            check_for_redirect(response)
+            check_for_redirect(book_url, payload)
         except requests.exceptions.HTTPError:
             continue
         book_description = get_book_page_html(book_id, payload)
@@ -79,7 +85,7 @@ def main():
         image_url = book_attributes.get('image_url')
         txt_file_name = f'{book_id}. {book_title}.txt'
         image_file_name = unquote(os.path.split(urlparse(image_url).path)[1])
-        download_file(txt_file_name, book_folder, response.content)
+        download_book(txt_file_name, book_folder, book_url, payload)
         download_cover(image_url, image_file_name, images_folder)
 
 
