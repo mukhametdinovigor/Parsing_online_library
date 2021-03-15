@@ -49,17 +49,21 @@ def check_for_redirect(book_url, payload):
         raise requests.HTTPError()
 
 
-def download_file(filename, folder, response_content):
+def download_file(filename, folder, response_file):
     os.makedirs(folder, exist_ok=True)
     file_path = sanitize_filepath(os.path.join(folder, sanitize_filename(filename)))
-    with open(file_path, 'wb') as file:
-        file.write(response_content)
+    if type(response_file) == str:
+        mode = 'w'
+    else:
+        mode = 'wb'
+    with open(file_path, mode) as file:
+        file.write(response_file)
 
 
 def download_book(filename, folder, book_url, payload):
     response = requests.get(book_url, params=payload, verify=False)
     response.raise_for_status()
-    download_file(filename, folder, response.content)
+    download_file(filename, folder, response.text)
 
 
 def download_cover(image_url, filename, folder):
