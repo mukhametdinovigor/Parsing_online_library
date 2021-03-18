@@ -50,13 +50,9 @@ def parse_book_page(book_description):
     return book_attributes
 
 
-def download_file(filename, folder, response_file):
+def download_file(filename, folder, response_file, mode):
     os.makedirs(folder, exist_ok=True)
     file_path = sanitize_filepath(os.path.join(folder, sanitize_filename(filename)))
-    if type(response_file) == str:
-        mode = 'w'
-    else:
-        mode = 'wb'
     with open(file_path, mode) as file:
         file.write(response_file)
 
@@ -64,13 +60,13 @@ def download_file(filename, folder, response_file):
 def download_book(filename, folder, book_url, payload):
     response = requests.get(book_url, params=payload, verify=False)
     response.raise_for_status()
-    download_file(filename, folder, response.text)
+    download_file(filename, folder, response.text, 'w')
 
 
 def download_cover(image_url, filename, folder):
     response = requests.get(image_url, verify=False)
     response.raise_for_status()
-    download_file(filename, folder, response.content)
+    download_file(filename, folder, response.content, 'wb')
 
 
 def main():
