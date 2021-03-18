@@ -16,6 +16,13 @@ def create_args_parser():
     return args
 
 
+def check_for_redirect(book_url, payload):
+    response = requests.get(book_url, params=payload, verify=False)
+    response.raise_for_status()
+    if len(response.history):
+        raise requests.HTTPError()
+
+
 def get_book_page_html(book_id, payload):
     url = f'https://tululu.org/b{book_id}/'
     response = requests.get(url, params=payload, verify=False)
@@ -41,12 +48,6 @@ def parse_book_page(book_description):
         'book_genres': book_genres
     }
     return book_attributes
-
-
-def check_for_redirect(book_url, payload):
-    response = requests.get(book_url, params=payload, verify=False)
-    if len(response.history):
-        raise requests.HTTPError()
 
 
 def download_file(filename, folder, response_file):
@@ -82,16 +83,16 @@ def main():
         payload = {"id": book_id}
         try:
             check_for_redirect(book_url, payload)
+            book_description = get_book_page_html(book_id, payload)
+            book_attributes = parse_book_page(book_description)
+            book_title = book_attributes.get('book_title')
+            image_url = book_attributes.get('image_url')
+            txt_file_name = f'{book_id}. {book_title}.txt'
+            image_file_name = unquote(os.path.split(urlparse(image_url).path)[1])
+            download_book(txt_file_name, book_folder, book_url, payload)
+            download_cover(image_url, image_file_name, images_folder)
         except requests.exceptions.HTTPError:
             continue
-        book_description = get_book_page_html(book_id, payload)
-        book_attributes = parse_book_page(book_description)
-        book_title = book_attributes.get('book_title')
-        image_url = book_attributes.get('image_url')
-        txt_file_name = f'{book_id}. {book_title}.txt'
-        image_file_name = unquote(os.path.split(urlparse(image_url).path)[1])
-        download_book(txt_file_name, book_folder, book_url, payload)
-        download_cover(image_url, image_file_name, images_folder)
 
 
 if __name__ == '__main__':
