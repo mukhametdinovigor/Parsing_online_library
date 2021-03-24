@@ -16,7 +16,7 @@ def create_args_parser():
     return args
 
 
-def check_for_redirect(book_url, payload):
+def check_for_error(book_url, payload):
     response = requests.get(book_url, params=payload, verify=False)
     response.raise_for_status()
     if len(response.history):
@@ -78,7 +78,7 @@ def main():
     for book_id in range(args.start_id, args.end_id + 1):
         payload = {"id": book_id}
         try:
-            check_for_redirect(book_url, payload)
+            check_for_error(book_url, payload)
             book_description = get_book_page_html(book_id, payload)
             book_attributes = parse_book_page(book_description)
             book_title = book_attributes.get('book_title')
@@ -86,7 +86,7 @@ def main():
             txt_file_name = f'{book_id}. {book_title}.txt'
             image_file_name = unquote(os.path.split(urlparse(image_url).path)[1])
             download_book(txt_file_name, book_folder, book_url, payload)
-            download_cover(image_url, image_file_name, images_folder)
+            download_cover(image_url, image_file_name, images_folder)   
         except requests.exceptions.HTTPError:
             continue
 
