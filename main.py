@@ -6,13 +6,17 @@ from urllib.parse import urljoin, urlparse, unquote
 import requests
 import urllib3
 from bs4 import BeautifulSoup
-from pathvalidate import sanitize_filename, sanitize_filepath
+from pathvalidate import sanitize_filename
+from pathvalidate.argparse import sanitize_filepath_arg
 
 
 def create_args_parser():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--start_page', default=700, type=int)
-    parser.add_argument('--end_page', default=702, type=int)
+    parser.add_argument('-s', '--start_page', default=700, type=int)
+    parser.add_argument('-e', '--end_page', default=702, type=int)
+    parser.add_argument('-d', '--dest_folder', default=os.getcwd(), type=sanitize_filepath_arg)
+    parser.add_argument('-si', '--skip_imgs', action='store_true', default=False)
+    parser.add_argument('-st', '--skip_txt', action='store_true', default=False)
     args = parser.parse_args()
     return args
 
@@ -67,7 +71,7 @@ def parse_book_page(book_description):
 
 def download_file(filename, folder, response_file, mode):
     os.makedirs(folder, exist_ok=True)
-    file_path = sanitize_filepath(os.path.join(folder, sanitize_filename(filename)))
+    file_path = os.path.join(folder, sanitize_filename(filename))
     with open(file_path, mode, encoding='utf-8') as file:
         file.write(response_file)
     return file_path
@@ -84,13 +88,13 @@ def download_cover(image_url, filename, folder):
     response = requests.get(image_url, verify=False)
     response.raise_for_status()
     os.makedirs(folder, exist_ok=True)
-    image_path = sanitize_filepath(os.path.join(folder, sanitize_filename(filename)))
+    image_path = os.path.join(folder, sanitize_filename(filename))
     with open(image_path, 'wb') as file:
         file.write(response.content)
     return image_path
 
 
-def get_books_json(book_attributes, img_src, book_path):
+def get_books_json(book_attributes, img_src, book_path, book_json_path):
     books = {
         'title': book_attributes.get('book_title'),
         'author': book_attributes.get('book_author'),
@@ -99,7 +103,7 @@ def get_books_json(book_attributes, img_src, book_path):
         'comments': book_attributes.get('book_comments'),
         'genres': book_attributes.get('book_genres')
     }
-    with open("books.json", "a", encoding='utf8') as my_file:
+    with open(book_json_path, 'a', encoding='utf8') as my_file:
         json.dump(books, my_file, ensure_ascii=False, indent=4)
 
 
@@ -108,8 +112,9 @@ def main():
     args = create_args_parser()
     scifi_books_url = 'https://tululu.org/l55/'
     book_url = 'https://tululu.org/txt.php'
-    book_folder = 'books'
-    images_folder = 'images'
+    books_folder_path = os.path.join(args.dest_folder, 'books')
+    images_folder_path = os.path.join(args.dest_folder, 'images')
+    book_json_path = os.path.join(args.dest_folder, 'books.json')
     for page_number in range(args.start_page, args.end_page):
         scifi_books_page_url = urljoin(scifi_books_url, str(page_number))
         books_page = get_scifi_books_page_html(scifi_books_page_url)
@@ -124,9 +129,15 @@ def main():
                 image_url = book_attributes.get('image_url')
                 txt_file_name = f'{book_id}.{book_title}.txt'
                 image_file_name = unquote(os.path.split(urlparse(image_url).path)[1])
-                book_path = download_book(txt_file_name, book_folder, book_url, payload)
-                img_src = download_cover(image_url, image_file_name, images_folder)
-                get_books_json(book_attributes, img_src, book_path)
+                if args.skip_txt:
+                    book_path = ''
+                else:
+                    book_path = download_book(txt_file_name, books_folder_path, book_url, payload)
+                if args.skip_imgs:
+                    img_src = ''
+                else:
+                    img_src = download_cover(image_url, image_file_name, images_folder_path)
+                get_books_json(book_attributes, img_src, book_path, book_json_path)
             except requests.exceptions.HTTPError:
                 continue
 
