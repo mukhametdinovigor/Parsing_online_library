@@ -13,7 +13,7 @@ from pathvalidate.argparse import sanitize_filepath_arg
 def create_args_parser():
     parser = argparse.ArgumentParser()
     parser.add_argument('-s', '--start_page', default=700, type=int)
-    parser.add_argument('-e', '--end_page', default=702, type=int)
+    parser.add_argument('-e', '--end_page', default=701, type=int)
     parser.add_argument('-d', '--dest_folder', default=os.getcwd(), type=sanitize_filepath_arg)
     parser.add_argument('-si', '--skip_imgs', action='store_true', default=False)
     parser.add_argument('-st', '--skip_txt', action='store_true', default=False)
@@ -94,6 +94,22 @@ def download_cover(image_url, filename, folder):
     return image_path
 
 
+def get_book_path(skip_txt, txt_file_name, books_folder_path, book_url, payload):
+    if skip_txt:
+        book_path = ''
+        return book_path
+    book_path = download_book(txt_file_name, books_folder_path, book_url, payload)
+    return book_path
+
+
+def get_img_src(skip_imgs, image_url, image_file_name, images_folder_path):
+    if skip_imgs:
+        img_src = ''
+        return img_src
+    img_src = download_cover(image_url, image_file_name, images_folder_path)
+    return img_src
+
+
 def get_books_json(book_attributes, img_src, book_path, book_json_path):
     books = {
         'title': book_attributes.get('book_title'),
@@ -115,7 +131,7 @@ def main():
     books_folder_path = os.path.join(args.dest_folder, 'books')
     images_folder_path = os.path.join(args.dest_folder, 'images')
     book_json_path = os.path.join(args.dest_folder, 'books.json')
-    for page_number in range(args.start_page, args.end_page):
+    for page_number in range(args.start_page, args.end_page + 1):
         scifi_books_page_url = urljoin(scifi_books_url, str(page_number))
         books_page = get_scifi_books_page_html(scifi_books_page_url)
         book_ids = get_book_ids(books_page)
@@ -129,14 +145,8 @@ def main():
                 image_url = book_attributes.get('image_url')
                 txt_file_name = f'{book_id}.{book_title}.txt'
                 image_file_name = unquote(os.path.split(urlparse(image_url).path)[1])
-                if args.skip_txt:
-                    book_path = ''
-                else:
-                    book_path = download_book(txt_file_name, books_folder_path, book_url, payload)
-                if args.skip_imgs:
-                    img_src = ''
-                else:
-                    img_src = download_cover(image_url, image_file_name, images_folder_path)
+                book_path = get_book_path(args.skip_txt, txt_file_name, books_folder_path, book_url, payload)
+                img_src = get_img_src(args.skip_imgs, image_url, image_file_name, images_folder_path)
                 get_books_json(book_attributes, img_src, book_path, book_json_path)
             except requests.exceptions.HTTPError:
                 continue
