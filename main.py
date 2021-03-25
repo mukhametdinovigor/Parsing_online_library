@@ -11,8 +11,8 @@ from pathvalidate import sanitize_filename, sanitize_filepath
 
 def create_args_parser():
     parser = argparse.ArgumentParser()
-    parser.add_argument('start_id', nargs='?', default=1, type=int)
-    parser.add_argument('end_id', nargs='?', default=10, type=int)
+    parser.add_argument('--start_page', default=700, type=int)
+    parser.add_argument('--end_page', default=702, type=int)
     args = parser.parse_args()
     return args
 
@@ -68,7 +68,7 @@ def parse_book_page(book_description):
 def download_file(filename, folder, response_file, mode):
     os.makedirs(folder, exist_ok=True)
     file_path = sanitize_filepath(os.path.join(folder, sanitize_filename(filename)))
-    with open(file_path, mode) as file:
+    with open(file_path, mode, encoding='utf-8') as file:
         file.write(response_file)
     return file_path
 
@@ -83,8 +83,11 @@ def download_book(filename, folder, book_url, payload):
 def download_cover(image_url, filename, folder):
     response = requests.get(image_url, verify=False)
     response.raise_for_status()
-    img_src = download_file(filename, folder, response.content, 'wb')
-    return img_src
+    os.makedirs(folder, exist_ok=True)
+    image_path = sanitize_filepath(os.path.join(folder, sanitize_filename(filename)))
+    with open(image_path, 'wb') as file:
+        file.write(response.content)
+    return image_path
 
 
 def get_books_json(book_attributes, img_src, book_path):
@@ -107,7 +110,7 @@ def main():
     book_url = 'https://tululu.org/txt.php'
     book_folder = 'books'
     images_folder = 'images'
-    for page_number in range(1, 2):
+    for page_number in range(args.start_page, args.end_page):
         scifi_books_page_url = urljoin(scifi_books_url, str(page_number))
         books_page = get_scifi_books_page_html(scifi_books_page_url)
         book_ids = get_book_ids(books_page)
