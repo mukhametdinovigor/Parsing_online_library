@@ -66,8 +66,8 @@ def parse_book_page(book_description):
     image_selector = '.bookimage img'
     comments_selector = '.texts .black'
     genres_selector = 'span.d_book a'
-    book_title, book_author = soup.select(title_author_selector)[0].text.split('::')
-    image_name = soup.select(image_selector)[0].attrs.get('src')
+    book_title, book_author = soup.select_one(title_author_selector).text.split('::')
+    image_name = soup.select_one(image_selector).attrs.get('src')
     image_url = urljoin('https://tululu.org', image_name)
     book_comments = [comment.text for comment in soup.select(comments_selector)]
     book_genres = [genre.text for genre in soup.select(genres_selector)]
