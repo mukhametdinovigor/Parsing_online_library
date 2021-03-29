@@ -34,8 +34,7 @@ def create_args_parser(pages_count):
     return args
 
 
-def check_for_errors(book_url, payload):
-    response = requests.get(book_url, params=payload, verify=False)
+def check_for_errors(response):
     response.raise_for_status()
     if len(response.history):
         raise requests.HTTPError()
@@ -43,7 +42,7 @@ def check_for_errors(book_url, payload):
 
 def get_scifi_books_page_html(url):
     response = requests.get(url, verify=False)
-    response.raise_for_status()
+    check_for_errors(response)
     return response.text
 
 
@@ -57,7 +56,7 @@ def get_book_ids(books_page):
 def get_book_page_html(book_id, payload):
     url = f'https://tululu.org/b{book_id}/'
     response = requests.get(url, params=payload, verify=False)
-    response.raise_for_status()
+    check_for_errors(response)
     return response.text
 
 
@@ -90,16 +89,14 @@ def download_file(filename, folder, response_file, mode):
     return file_path
 
 
-def download_book(filename, folder, book_url, payload):
-    response = requests.get(book_url, params=payload, verify=False)
-    response.raise_for_status()
+def download_book(filename, folder, response):
     book_path = download_file(filename, folder, response.text, 'w')
     return book_path
 
 
 def download_cover(image_url, filename, folder):
     response = requests.get(image_url, verify=False)
-    response.raise_for_status()
+    check_for_errors(response)
     os.makedirs(folder, exist_ok=True)
     image_path = os.path.join(folder, sanitize_filename(filename))
     with open(image_path, 'wb') as file:
@@ -107,11 +104,11 @@ def download_cover(image_url, filename, folder):
     return image_path
 
 
-def get_book_path(skip_txt, txt_file_name, books_folder_path, book_url, payload):
+def get_book_path(skip_txt, txt_file_name, books_folder_path, response):
     if skip_txt:
         book_path = ''
         return book_path
-    book_path = download_book(txt_file_name, books_folder_path, book_url, payload)
+    book_path = download_book(txt_file_name, books_folder_path, response)
     return book_path
 
 
@@ -153,14 +150,15 @@ def main():
         for book_id in book_ids:
             payload = {"id": book_id}
             try:
-                check_for_errors(book_url, payload)
+                response = requests.get(book_url, params=payload, verify=False)
+                check_for_errors(response)
                 book_description = get_book_page_html(book_id, payload)
                 book_attributes = parse_book_page(book_description)
                 book_title = book_attributes.get('book_title')
                 image_url = book_attributes.get('image_url')
                 txt_file_name = f'{book_id}.{book_title}.txt'
                 image_file_name = unquote(os.path.split(urlparse(image_url).path)[1])
-                book_path = get_book_path(args.skip_txt, txt_file_name, books_folder_path, book_url, payload)
+                book_path = get_book_path(args.skip_txt, txt_file_name, books_folder_path, response)
                 img_src = get_img_src(args.skip_imgs, image_url, image_file_name, images_folder_path)
                 get_books_json(book_attributes, img_src, book_path, book_json_path)
             except requests.exceptions.HTTPError:
