@@ -105,19 +105,15 @@ def download_cover(image_url, filename, folder):
 
 
 def get_book_path(skip_txt, txt_file_name, books_folder_path, response):
-    if skip_txt:
-        book_path = ''
+    if not skip_txt:
+        book_path = download_book(txt_file_name, books_folder_path, response)
         return book_path
-    book_path = download_book(txt_file_name, books_folder_path, response)
-    return book_path
 
 
 def get_img_src(skip_imgs, image_url, image_file_name, images_folder_path):
-    if skip_imgs:
-        img_src = ''
+    if not skip_imgs:
+        img_src = download_cover(image_url, image_file_name, images_folder_path)
         return img_src
-    img_src = download_cover(image_url, image_file_name, images_folder_path)
-    return img_src
 
 
 def get_books_json(book_attributes, img_src, book_path, book_json_path):
