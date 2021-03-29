@@ -40,7 +40,7 @@ Run script in command line:
 python3 main.py
 ```
 
-This command downloads books from page 700 to 701 to folder `books`. Book covers are downloaded to a folder
+This command downloads books from page 1 to 701 to folder `books`. Book covers are downloaded to a folder
 `images`. Information about books are downloaded into file `book.json`.
 
 You can use such commandline arguments, first - short version, second - long version, you should use
@@ -50,7 +50,7 @@ one of them:
 -s, --start_page
 ```
 
-this command is needed to configure number of starting page, by default it is 700.
+this command is needed to configure number of starting page, by default it is 1.
 
 `main.py -s 680` - will download books from page 680 to 701.
 
