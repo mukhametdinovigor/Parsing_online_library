@@ -153,7 +153,7 @@ def main():
                 book_title = book_attributes.get('book_title')
                 image_url = book_attributes.get('image_url')
                 txt_file_name = f'{book_id}.{book_title}.txt'
-                image_file_name = unquote(os.path.split(urlparse(image_url).path)[1])
+                image_file_name = f'book_id_{book_id}_{unquote(os.path.split(urlparse(image_url).path)[1])}'
                 book_path = get_book_path(args.skip_txt, txt_file_name, books_folder_path, response)
                 img_src = get_img_src(args.skip_imgs, image_url, image_file_name, images_folder_path)
                 get_books_json(book_attributes, img_src, book_path, book_json_path)
