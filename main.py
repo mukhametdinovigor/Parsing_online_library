@@ -3,6 +3,7 @@ import json
 import os
 from urllib.parse import urljoin, urlparse, unquote
 
+from environs import Env
 import requests
 import urllib3
 from bs4 import BeautifulSoup
@@ -20,10 +21,13 @@ def get_book_pages_count():
 
 
 def create_args_parser(pages_count):
+    env = Env()
+    env.read_env()
+    dest_folder = env('DEST_FOLDER')
     parser = argparse.ArgumentParser()
     parser.add_argument('-s', '--start_page', default=1, type=int)
     parser.add_argument('-e', '--end_page', default=pages_count, type=int)
-    parser.add_argument('-d', '--dest_folder', default=os.getcwd(), type=sanitize_filepath_arg)
+    parser.add_argument('-d', '--dest_folder', default=dest_folder, type=sanitize_filepath_arg)
     parser.add_argument('-si', '--skip_imgs', action='store_true', default=False)
     parser.add_argument('-st', '--skip_txt', action='store_true', default=False)
     args = parser.parse_args()
