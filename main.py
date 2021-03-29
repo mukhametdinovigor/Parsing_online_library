@@ -10,10 +10,19 @@ from pathvalidate import sanitize_filename
 from pathvalidate.argparse import sanitize_filepath_arg
 
 
-def create_args_parser():
+def get_book_pages_count():
+    url = 'https://tululu.org/l55/'
+    books_page = get_scifi_books_page_html(url)
+    soup = BeautifulSoup(books_page, 'lxml')
+    pages_count_selector = '.npage'
+    pages_count = int(soup.select(pages_count_selector)[-1].text)
+    return pages_count
+
+
+def create_args_parser(pages_count):
     parser = argparse.ArgumentParser()
-    parser.add_argument('-s', '--start_page', default=700, type=int)
-    parser.add_argument('-e', '--end_page', default=701, type=int)
+    parser.add_argument('-s', '--start_page', default=1, type=int)
+    parser.add_argument('-e', '--end_page', default=pages_count, type=int)
     parser.add_argument('-d', '--dest_folder', default=os.getcwd(), type=sanitize_filepath_arg)
     parser.add_argument('-si', '--skip_imgs', action='store_true', default=False)
     parser.add_argument('-st', '--skip_txt', action='store_true', default=False)
@@ -125,7 +134,9 @@ def get_books_json(book_attributes, img_src, book_path, book_json_path):
 
 def main():
     urllib3.disable_warnings()
-    args = create_args_parser()
+    pages_count = get_book_pages_count()
+    print(f'На сайте страниц книг - {pages_count}.')
+    args = create_args_parser(pages_count)
     scifi_books_url = 'https://tululu.org/l55/'
     book_url = 'https://tululu.org/txt.php'
     books_folder_path = os.path.join(args.dest_folder, 'books')
