@@ -50,7 +50,7 @@ def get_scifi_books_page_html(url):
 def get_book_ids(books_page):
     soup = BeautifulSoup(books_page, 'lxml')
     id_selector = '.d_book a[href^="/b"][title^="Бесплатная"]'
-    books_ids = [book_block.attrs.get('href')[2:-1]for book_block in soup.select(id_selector)]
+    books_ids = [''.join(symbol for symbol in book_block.attrs.get('href') if symbol.isdigit()) for book_block in soup.select(id_selector)]
     return books_ids
 
 
