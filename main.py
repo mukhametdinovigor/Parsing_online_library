@@ -116,7 +116,7 @@ def get_img_src(skip_imgs, image_url, image_file_name, images_folder_path):
         return img_src
 
 
-def get_books_json(book_attributes, img_src, book_path, book_json_path):
+def save_books_json(book_attributes, img_src, book_path, book_json_path):
     books = {
         'title': book_attributes.get('book_title'),
         'author': book_attributes.get('book_author'),
@@ -156,7 +156,7 @@ def main():
                 image_file_name = f'book_id_{book_id}_{unquote(os.path.split(urlparse(image_url).path)[1])}'
                 book_path = get_book_path(args.skip_txt, txt_file_name, books_folder_path, response)
                 img_src = get_img_src(args.skip_imgs, image_url, image_file_name, images_folder_path)
-                get_books_json(book_attributes, img_src, book_path, book_json_path)
+                save_books_json(book_attributes, img_src, book_path, book_json_path)
             except requests.exceptions.HTTPError:
                 continue
 
