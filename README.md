@@ -32,6 +32,12 @@ Then use `pip` (or `pip3`, if there is a conflict with Python2) to install depen
 ```
 pip install -r requirements.txt
 ```
+Also you need create `.env` file and write a line like this into it:
+
+```
+DEST_FOLDER='C:\\tululu_books'
+```
+You can change the folder here to customize where books, images and book.json are downloaded.
 
 ## How to run script
 
@@ -68,6 +74,7 @@ this command is needed to configure number of ending page, by default it is 701.
 ```
 
 this command is needed to configure folder for books, images and book.json, by default it is home folder of your project.
+You also can change it into .env file.
 
 `main.py -d C:\My_books` - will download books to folder My_books (this example is for Windows).
 
