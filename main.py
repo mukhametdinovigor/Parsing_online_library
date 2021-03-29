@@ -1,6 +1,7 @@
 import argparse
 import json
 import os
+import sys
 from urllib.parse import urljoin, urlparse, unquote
 
 from environs import Env
@@ -158,6 +159,7 @@ def main():
                 img_src = get_img_src(args.skip_imgs, image_url, image_file_name, images_folder_path)
                 save_books_json(book_attributes, img_src, book_path, book_json_path)
             except requests.exceptions.HTTPError:
+                sys.stderr.write(f'HTTPError. Could not download file from here - https://tululu.org/b{book_id}\n')
                 continue
 
 
