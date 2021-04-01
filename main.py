@@ -21,6 +21,7 @@ def get_book_pages_count():
     pages_count = int(pages_count_tag.text)
     return pages_count
 
+
 def create_args_parser(pages_count):
     env = Env()
     env.read_env()
@@ -50,8 +51,9 @@ def get_scifi_books_page_html(url):
 def get_book_ids(books_page):
     soup = BeautifulSoup(books_page, 'lxml')
     id_selector = '.d_book a[href^="/b"][title^="Бесплатная"]'
-    books_ids = [''.join(symbol for symbol in book_block.attrs.get('href') if symbol.isdigit()) for book_block in soup.select(id_selector)]
-    return books_ids
+    raw_books_ids = [book_block.attrs.get('href') for book_block in soup.select(id_selector)]
+    book_ids = [raw_books_id.split('/b')[-1].rstrip('/') for raw_books_id in raw_books_ids]
+    return book_ids
 
 
 def get_book_page_html(book_id, payload):
