@@ -17,9 +17,9 @@ def get_book_pages_count():
     books_page = get_scifi_books_page_html(url)
     soup = BeautifulSoup(books_page, 'lxml')
     pages_count_selector = '.npage'
-    pages_count = int(soup.select(pages_count_selector)[-1].text)
+    *_, pages_count_tag = soup.select(pages_count_selector)
+    pages_count = int(pages_count_tag.text)
     return pages_count
-
 
 def create_args_parser(pages_count):
     env = Env()
