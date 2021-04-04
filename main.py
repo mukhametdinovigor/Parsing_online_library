@@ -16,9 +16,8 @@ def get_book_pages_count():
     url = 'https://tululu.org/l55/'
     books_page = get_scifi_books_page_html(url)
     soup = BeautifulSoup(books_page, 'lxml')
-    pages_count_selector = '.npage'
-    *_, pages_count_tag = soup.select(pages_count_selector)
-    pages_count = int(pages_count_tag.text)
+    pages_count_selector = '.npage:last-child'
+    pages_count = int(soup.select_one(pages_count_selector).text)
     return pages_count
 
 
