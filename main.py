@@ -26,7 +26,7 @@ def create_args_parser(pages_count):
     env.read_env()
     dest_folder = env('DEST_FOLDER')
     parser = argparse.ArgumentParser()
-    parser.add_argument('-s', '--start_page', default=1, type=int)
+    parser.add_argument('-s', '--start_page', default=701, type=int)
     parser.add_argument('-e', '--end_page', default=pages_count, type=int)
     parser.add_argument('-d', '--dest_folder', default=dest_folder, type=sanitize_filepath_arg)
     parser.add_argument('-si', '--skip_imgs', action='store_true', default=False)
@@ -118,7 +118,7 @@ def get_img_src(skip_imgs, image_url, image_file_name, images_folder_path):
         return img_src
 
 
-def save_books_json(book_attributes, img_src, book_path, book_json_path):
+def get_book_details(book_attributes, img_src, book_path):
     books = {
         'title': book_attributes.get('book_title'),
         'author': book_attributes.get('book_author'),
@@ -127,8 +127,12 @@ def save_books_json(book_attributes, img_src, book_path, book_json_path):
         'comments': book_attributes.get('book_comments'),
         'genres': book_attributes.get('book_genres')
     }
+    return books
+
+
+def save_books_json(prepared_books, book_json_path):
     with open(book_json_path, 'a', encoding='utf8') as my_file:
-        json.dump(books, my_file, ensure_ascii=False, indent=4)
+        json.dump(prepared_books, my_file, ensure_ascii=False, indent=4)
 
 
 def main():
@@ -141,6 +145,7 @@ def main():
     books_folder_path = os.path.join(args.dest_folder, 'books')
     images_folder_path = os.path.join(args.dest_folder, 'images')
     book_json_path = os.path.join(args.dest_folder, 'books.json')
+    prepared_books = []
     for page_number in range(args.start_page, args.end_page + 1):
         scifi_books_page_url = urljoin(scifi_books_url, str(page_number))
         books_page = get_scifi_books_page_html(scifi_books_page_url)
@@ -158,10 +163,12 @@ def main():
                 image_file_name = f'book_id_{book_id}_{unquote(os.path.split(urlparse(image_url).path)[1])}'
                 book_path = get_book_path(args.skip_txt, txt_file_name, books_folder_path, response)
                 img_src = get_img_src(args.skip_imgs, image_url, image_file_name, images_folder_path)
-                save_books_json(book_attributes, img_src, book_path, book_json_path)
+                book_details = get_book_details(book_attributes, img_src, book_path)
+                prepared_books.append(book_details)
             except requests.exceptions.HTTPError:
                 sys.stderr.write(f'HTTPError. Could not download file from here - https://tululu.org/b{book_id}\n')
                 continue
+    save_books_json(prepared_books, book_json_path)
 
 
 if __name__ == '__main__':
